@@ -16,11 +16,11 @@ services:
     image: freetube-sync:latest
     restart: unless-stopped
     ports:
-      - "${LISTEN_PORT:-8080}:8080"
+      - "${LISTEN_PORT:-8080}:${LISTEN_PORT:-8080}"
     volumes:
       - ./data:/data
     environment:
-      FREETUBE_SYNC_LISTEN: ":8080"
+      FREETUBE_SYNC_LISTEN: ":${LISTEN_PORT:-8080}"
       FREETUBE_SYNC_DATA: "/data"
       FREETUBE_SYNC_TOKEN: "${TOKEN:?set TOKEN in .env — see .env.example}"
     command: ["serve"]
