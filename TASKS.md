@@ -36,12 +36,12 @@ invariants, architecture, and conventions that apply throughout.
       `profiles.db.freetube-sync-bak` → atomic `rename`.
 - [x] Round-trip test: parse a fixture, write it back unchanged, diff
       byte-for-byte (except subscriptions field if modified).
-- [x] Add a real, scrubbed `profiles.db` fixture under `testdata/`.
+- [x] Add a real, scrubbed `profiles.db` fixture under `test/`.
 - [x] Unit tests: add/remove subscriptions, verify other profiles/fields
       untouched, verify backup file created, verify atomic write (no partial
       file on simulated failure).
 
-**Deliverable:** `freetube-sync inspect --db testdata/profiles.db` prints
+**Deliverable:** `freetube-sync inspect --db test/profiles.db` prints
 parsed subscriptions correctly. No network code involved yet.
 
 ---

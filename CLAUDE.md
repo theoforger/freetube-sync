@@ -84,7 +84,7 @@ deployments/Caddyfile
 deployments/Dockerfile
 deployments/.env.example
 init/systemd/                    # optional systemd user service + timer
-testdata/profiles.db             # real, scrubbed fixture (Stage 1)
+test/profiles.db                 # real, scrubbed fixture (Stage 1)
 ```
 
 `cmd/freetube-sync` is the only package importable as `main`; everything
@@ -144,8 +144,8 @@ while FreeTube might be running.
 
 - Go stdlib only where possible (see invariant #7).
 - Every function touching `profiles.db` gets a test using a real, scrubbed
-  fixture file under `testdata/` — not a synthetic minimal file. This is the
-  highest-risk part of the codebase (real user data corruption); treat it
+  fixture file under `test/` — not a synthetic minimal file. This is
+  the highest-risk part of the codebase (real user data corruption); treat it
   accordingly.
 - `internal/merge` must have 100% branch coverage — it's a pure function,
   there's no excuse not to.

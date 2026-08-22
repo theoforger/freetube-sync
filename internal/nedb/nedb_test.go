@@ -10,7 +10,7 @@ import (
 
 func readFixture(t *testing.T) []byte {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", "..", "testdata", "profiles.db"))
+	data, err := os.ReadFile(filepath.Join("..", "..", "test", "profiles.db"))
 	if err != nil {
 		t.Fatalf("read fixture: %v", err)
 	}
@@ -146,6 +146,46 @@ func rawFieldsOf(t *testing.T, line []byte) map[string]json.RawMessage {
 	return m
 }
 
+// TestIsAllChannelsProfileMatchesByIDNotName is a regression test for a
+// real bug: FreeTube stores the default profile's "name" as an
+// untranslated i18n key ("Profile.All Channels"), resolved to a display
+// string by whatever locale is active — never the literal string
+// "All Channels" — while "_id" is always the stable "allChannels"
+// regardless of locale. Matching on "name" alone meant every real sync
+// failed with "no \"All Channels\" profile found in database".
+func TestIsAllChannelsProfileMatchesByIDNotName(t *testing.T) {
+	tests := []struct {
+		name string
+		line string
+		want bool
+	}{
+		{
+			name: "real-world shape: untranslated i18n key name, correct _id",
+			line: `{"_id":"allChannels","name":"Profile.All Channels","subscriptions":[]}`,
+			want: true,
+		},
+		{
+			name: "literal English name, correct _id",
+			line: `{"_id":"allChannels","name":"All Channels","subscriptions":[]}`,
+			want: true,
+		},
+		{
+			name: "literal English name but wrong _id must not match",
+			line: `{"_id":"someOtherProfile","name":"All Channels","subscriptions":[]}`,
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db := Parse([]byte(tt.line))
+			got := db.Docs[0].IsAllChannelsProfile()
+			if got != tt.want {
+				t.Errorf("IsAllChannelsProfile() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestSetSubscriptionsOnMissingProfileErrors(t *testing.T) {
 	db := Parse([]byte(`{"_id":"x","name":"Not All Channels","subscriptions":[]}` + "\n"))
 	if err := db.SetSubscriptions(nil); err == nil {
@@ -154,7 +194,7 @@ func TestSetSubscriptionsOnMissingProfileErrors(t *testing.T) {
 }
 
 func TestSetSubscriptionsWithNilWritesEmptyArray(t *testing.T) {
-	db := Parse([]byte(`{"name":"All Channels","subscriptions":[{"id":"UCx","name":"X"}]}` + "\n"))
+	db := Parse([]byte(`{"_id":"allChannels","name":"Profile.All Channels","subscriptions":[{"id":"UCx","name":"X"}]}` + "\n"))
 	if err := db.SetSubscriptions(nil); err != nil {
 		t.Fatalf("SetSubscriptions: %v", err)
 	}
@@ -283,7 +323,7 @@ func TestWriteFileFailureLeavesOriginalIntact(t *testing.T) {
 }
 
 func TestReadFileFixture(t *testing.T) {
-	db, err := ReadFile(filepath.Join("..", "..", "testdata", "profiles.db"))
+	db, err := ReadFile(filepath.Join("..", "..", "test", "profiles.db"))
 	if err != nil {
 		t.Fatalf("ReadFile: %v", err)
 	}

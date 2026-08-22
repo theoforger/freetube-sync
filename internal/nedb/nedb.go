@@ -26,10 +26,16 @@ import (
 	"path/filepath"
 )
 
-// allChannelsProfileName is the one profile this package ever mutates.
-// Sub-profiles, watch history, and playlists are out of scope (see
-// CLAUDE.md "Assumptions & non-goals").
-const allChannelsProfileName = "All Channels"
+// allChannelsProfileID is the one profile this package ever mutates,
+// identified by its stable "_id" — not its "name". FreeTube stores the
+// default profile's "name" as an untranslated i18n key
+// ("Profile.All Channels"), rendered into the display string by whatever
+// locale is active; on a non-English install (or any FreeTube version that
+// hasn't resolved it yet) it is never the literal string "All Channels".
+// "_id" is always "allChannels" regardless of locale, so it's the only
+// value that can be matched reliably. Sub-profiles, watch history, and
+// playlists are out of scope (see CLAUDE.md "Assumptions & non-goals").
+const allChannelsProfileID = "allChannels"
 
 // BackupSuffix is appended to the database path to name the pre-overwrite
 // backup file (invariant #3).
@@ -119,11 +125,19 @@ func (d Doc) Name() (string, error) {
 	return name, err
 }
 
+// ID returns the document's "_id" field, if present.
+func (d Doc) ID() (string, error) {
+	id, _, err := d.stringField("_id")
+	return id, err
+}
+
 // IsAllChannelsProfile reports whether this document is the "All Channels"
-// profile (invariant #4: the only profile freetube-sync ever mutates).
+// profile (invariant #4: the only profile freetube-sync ever mutates), by
+// its stable "_id" rather than its locale-dependent "name" — see
+// allChannelsProfileID.
 func (d Doc) IsAllChannelsProfile() bool {
-	name, err := d.Name()
-	return err == nil && name == allChannelsProfileName
+	id, err := d.ID()
+	return err == nil && id == allChannelsProfileID
 }
 
 // Subscriptions decodes the document's "subscriptions" field. A document
@@ -218,13 +232,13 @@ func (db DB) allChannelsIndex() (int, error) {
 	for i, doc := range db.Docs {
 		if doc.IsAllChannelsProfile() {
 			if found != -1 {
-				return -1, fmt.Errorf("multiple %q profiles found in database", allChannelsProfileName)
+				return -1, fmt.Errorf("multiple %q (_id %q) profiles found in database", "All Channels", allChannelsProfileID)
 			}
 			found = i
 		}
 	}
 	if found == -1 {
-		return -1, fmt.Errorf("no %q profile found in database", allChannelsProfileName)
+		return -1, fmt.Errorf("no %q (_id %q) profile found in database", "All Channels", allChannelsProfileID)
 	}
 	return found, nil
 }

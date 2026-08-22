@@ -57,18 +57,29 @@ func LockfilePresent(configDir string) (bool, error) {
 
 // ProcessRunning scans procRoot (normally /proc) for a running FreeTube
 // process, matching either the native binary name or the Flatpak app ID
-// against each process's cmdline.
+// against each process's cmdline. The caller's own PID is excluded: a
+// `run` invoked with an explicit launch-command override (e.g. the desktop
+// launcher's `freetube-sync run -- flatpak run io.freetubeapp.FreeTube`)
+// carries the Flatpak app ID directly in its own argv, so without this
+// exclusion every guard check made from inside that process — both the
+// pre-launch and post-exit sync — would match itself and report FreeTube
+// as running unconditionally, regardless of whether it actually is.
 func ProcessRunning(procRoot string) (bool, error) {
 	entries, err := os.ReadDir(procRoot)
 	if err != nil {
 		return false, err
 	}
+	selfPID := os.Getpid()
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
 		}
-		if _, err := strconv.Atoi(e.Name()); err != nil {
+		pid, err := strconv.Atoi(e.Name())
+		if err != nil {
 			continue // not a /proc/<pid> entry
+		}
+		if pid == selfPID {
+			continue
 		}
 		cmdline, err := os.ReadFile(filepath.Join(procRoot, e.Name(), "cmdline"))
 		if err != nil {

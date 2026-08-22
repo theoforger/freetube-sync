@@ -3,6 +3,7 @@ package guard
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 )
 
@@ -123,6 +124,27 @@ func TestProcessRunningIgnoresSubstringMatches(t *testing.T) {
 	}
 	if running {
 		t.Error("ProcessRunning = true, want false — these only mention \"freetube\" in an argument, none of them is FreeTube")
+	}
+}
+
+// TestProcessRunningExcludesSelf is a regression test for a real false
+// positive: `freetube-sync run -- flatpak run io.freetubeapp.FreeTube` (the
+// desktop launcher's explicit override form) puts the Flatpak app ID
+// directly in the freetube-sync process's own argv. Without excluding its
+// own PID from the scan, every guard check made from inside that process —
+// pre-launch and post-exit alike — matched itself and reported FreeTube as
+// running even when no such process actually existed.
+func TestProcessRunningExcludesSelf(t *testing.T) {
+	selfPID := strconv.Itoa(os.Getpid())
+	root := fakeProc(t, map[string]string{
+		selfPID: "/usr/local/bin/freetube-sync\x00run\x00--\x00flatpak\x00run\x00io.freetubeapp.FreeTube\x00",
+	})
+	running, err := ProcessRunning(root)
+	if err != nil {
+		t.Fatalf("ProcessRunning: %v", err)
+	}
+	if running {
+		t.Error("ProcessRunning = true for an entry matching the caller's own PID, want false — the scan must exclude itself")
 	}
 }
 
