@@ -105,6 +105,27 @@ func TestProcessRunningNoMatch(t *testing.T) {
 	}
 }
 
+// TestProcessRunningIgnoresSubstringMatches is a regression test for a
+// real false positive: matching "freetube" as a raw substring across the
+// whole cmdline blob flagged unrelated processes whose arguments merely
+// *mention* freetube — e.g. a shell command run from a directory named
+// freetube-sync, or referencing a file like notes-about-freetube.md. That
+// blocked every sync indefinitely even though FreeTube wasn't running.
+func TestProcessRunningIgnoresSubstringMatches(t *testing.T) {
+	root := fakeProc(t, map[string]string{
+		"100": "/bin/bash\x00-c\x00cd /home/user/freetube-sync && go test ./...\x00",
+		"101": "/usr/bin/vim\x00notes-about-freetube.md\x00",
+		"102": "/usr/bin/wget\x00https://example.com/freetube-linux.tar.gz\x00",
+	})
+	running, err := ProcessRunning(root)
+	if err != nil {
+		t.Fatalf("ProcessRunning: %v", err)
+	}
+	if running {
+		t.Error("ProcessRunning = true, want false — these only mention \"freetube\" in an argument, none of them is FreeTube")
+	}
+}
+
 func TestProcessRunningEmptyProcRoot(t *testing.T) {
 	root := t.TempDir()
 	running, err := ProcessRunning(root)

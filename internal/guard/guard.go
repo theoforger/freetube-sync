@@ -6,6 +6,7 @@
 package guard
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,9 +18,12 @@ import (
 // holds open for as long as it's running.
 const lockFileName = "SingletonLock"
 
-// processMatchers are substrings looked for (case-insensitively) in each
-// process's cmdline: the native binary name and the Flatpak app ID.
-var processMatchers = []string{"freetube", "io.freetubeapp.freetube"}
+// nativeBinaryName and flatpakAppIDLower identify a FreeTube process by
+// whole argv token, not substring — see processMatches.
+const (
+	nativeBinaryName  = "freetube"
+	flatpakAppIDLower = "io.freetubeapp.freetube"
+)
 
 // Options configures a guard check.
 type Options struct {
@@ -72,14 +76,31 @@ func ProcessRunning(procRoot string) (bool, error) {
 			// lack permission to read it — neither is fatal to the scan.
 			continue
 		}
-		text := strings.ToLower(string(cmdline))
-		for _, m := range processMatchers {
-			if strings.Contains(text, m) {
-				return true, nil
-			}
+		if processMatches(cmdline) {
+			return true, nil
 		}
 	}
 	return false, nil
+}
+
+// processMatches inspects a /proc/<pid>/cmdline blob — NUL-separated
+// argv, per the kernel's format — for FreeTube. It compares whole argv
+// tokens (by basename), not a substring search over the raw blob: a
+// substring match on the full cmdline would false-positive on, say,
+// `vim notes-about-freetube.md` or a download landing in
+// ~/Downloads/freetube-linux.tar.gz, both of which would otherwise look
+// like "FreeTube is running" and block every sync indefinitely.
+func processMatches(cmdline []byte) bool {
+	for _, arg := range bytes.Split(cmdline, []byte{0}) {
+		if len(arg) == 0 {
+			continue
+		}
+		token := strings.ToLower(filepath.Base(string(arg)))
+		if token == nativeBinaryName || token == flatpakAppIDLower {
+			return true
+		}
+	}
+	return false
 }
 
 // IsSafeToWrite reports whether it's safe to write profiles.db right now.
