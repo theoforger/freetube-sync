@@ -1,0 +1,26 @@
+# Default deployment: freetube-sync's port is published directly on the
+# host. This is only safe on a trusted network (Tailscale/WireGuard/LAN) —
+# there's no TLS here. `docker compose up -d` picks this file up
+# automatically (no -f needed) since it's named compose.yaml.
+#
+# For a setup safe to expose publicly, use compose.caddy.yaml instead of
+# this file (not alongside it) — it's a standalone, complete deployment
+# with a Caddy reverse proxy in front, not an overlay on top of this one:
+#
+#   docker compose -f compose.caddy.yaml up -d
+services:
+  freetube-sync:
+    build:
+      context: ../..
+      dockerfile: build/package/Dockerfile
+    image: freetube-sync:latest
+    restart: unless-stopped
+    ports:
+      - "${LISTEN_PORT:-8080}:8080"
+    volumes:
+      - ./data:/data
+    environment:
+      FREETUBE_SYNC_LISTEN: ":8080"
+      FREETUBE_SYNC_DATA: "/data"
+      FREETUBE_SYNC_TOKEN: "${TOKEN:?set TOKEN in .env — see .env.example}"
+    command: ["serve"]

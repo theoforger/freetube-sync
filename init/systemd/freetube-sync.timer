@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodically run freetube-sync (skipped automatically while FreeTube is running)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

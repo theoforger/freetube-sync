@@ -1,0 +1,9 @@
+[Unit]
+Description=freetube-sync subscription sync (one-shot)
+
+[Service]
+Type=oneshot
+# `sync` runs the guard check itself: if FreeTube is running, it logs and
+# exits 0 without touching profiles.db (CLAUDE.md invariant #1) — this unit
+# needs no extra logic to handle that case.
+ExecStart=%h/.local/bin/freetube-sync sync

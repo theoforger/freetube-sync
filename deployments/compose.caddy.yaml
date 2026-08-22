@@ -1,0 +1,39 @@
+# Standalone deployment with a Caddy reverse proxy for automatic HTTPS.
+# freetube-sync's port is NOT published directly — only Caddy's 80/443 are.
+# Use this instead of compose.yaml (not alongside it) when the server needs
+# to be reachable from outside a trusted network:
+#
+#   docker compose -f compose.caddy.yaml up -d
+services:
+  freetube-sync:
+    build:
+      context: ../..
+      dockerfile: build/package/Dockerfile
+    image: freetube-sync:latest
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    environment:
+      FREETUBE_SYNC_LISTEN: ":8080"
+      FREETUBE_SYNC_DATA: "/data"
+      FREETUBE_SYNC_TOKEN: "${TOKEN:?set TOKEN in .env — see .env.example}"
+    command: ["serve"]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: "${DOMAIN:-localhost}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - freetube-sync
+
+volumes:
+  caddy_data:
+  caddy_config:
