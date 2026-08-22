@@ -12,7 +12,7 @@ services:
     image: freetube-sync:latest
     restart: unless-stopped
     volumes:
-      - ./data:/data
+      - freetube-sync-data:/data
     environment:
       FREETUBE_SYNC_LISTEN: ":${LISTEN_PORT:-8080}"
       FREETUBE_SYNC_DATA: "/data"
@@ -36,5 +36,6 @@ services:
       - freetube-sync
 
 volumes:
+  freetube-sync-data:
   caddy_data:
   caddy_config:

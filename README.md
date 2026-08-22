@@ -53,6 +53,15 @@ cp .env.example .env
 docker compose -f compose.caddy.yaml up -d
 ```
 
+Both compose files store `state.json` in a Docker-managed named volume
+(`freetube-sync-data`), not a plain file under `deployments/`, so the image
+can run as its built-in nonroot user without host-permission issues. To
+inspect or back it up:
+
+```sh
+docker compose cp freetube-sync:/data/state.json ./state.json
+```
+
 **Without Docker:**
 
 ```sh

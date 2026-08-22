@@ -1,4 +1,3 @@
 /freetube-sync
-deployments/data/
 deployments/.env
 *.freetube-sync-bak
