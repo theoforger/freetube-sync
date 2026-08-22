@@ -7,8 +7,8 @@
 services:
   freetube-sync:
     build:
-      context: ../..
-      dockerfile: build/package/Dockerfile
+      context: ..
+      dockerfile: deployments/Dockerfile
     image: freetube-sync:latest
     restart: unless-stopped
     volumes:

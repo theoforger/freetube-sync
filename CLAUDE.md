@@ -78,10 +78,10 @@ internal/clientsync/             # client sync cycle: guard -> diff -> POST -> o
 internal/runner/                 # `run` subcommand's sync -> exec -> sync cycle
 scripts/install-client.sh        # desktop alias installer
 scripts/uninstall-client.sh
-build/package/Dockerfile
 deployments/compose.yaml         # default, no reverse proxy
 deployments/compose.caddy.yaml   # standalone alternative, with Caddy for TLS
 deployments/Caddyfile
+deployments/Dockerfile
 deployments/.env.example
 init/systemd/                    # optional systemd user service + timer
 testdata/profiles.db             # real, scrubbed fixture (Stage 1)

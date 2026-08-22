@@ -135,3 +135,8 @@ watch history, and playlists are untouched.
   parsed subscriptions, no side effects.
 - `--dry-run` on `sync`/`run` — previews the local add/remove diff without
   writing `profiles.db`, the shadow snapshot, or contacting the server.
+
+## License
+
+[AGPLv3](LICENSE). If you run a modified version of the server for others
+over a network, you must make your modified source available to them.
