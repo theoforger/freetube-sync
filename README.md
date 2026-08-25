@@ -12,8 +12,7 @@ freetube-sync inspect  --db path/to/profiles.db
 
 ## AI usage disclosure
 
-This project is planned and built mostly by AI with human influences
-on many decisions.
+This project is human directed and built mostly by AI.
 
 It's a product of me wanting a quick-and-dirty way to sync across my
 FreeTube instances. It does NOT reflect my personal opinion on using
