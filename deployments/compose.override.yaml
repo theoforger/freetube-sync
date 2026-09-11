@@ -1,0 +1,11 @@
+# Network override for my personal deployment setup
+
+services:
+  freetube-sync:
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true
