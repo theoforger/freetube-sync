@@ -9,7 +9,6 @@ services:
     build:
       context: .
       dockerfile: deployments/Dockerfile
-    image: freetube-sync:latest
     restart: unless-stopped
     volumes:
       - freetube-sync-data:/data
