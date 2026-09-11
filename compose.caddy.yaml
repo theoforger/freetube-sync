@@ -7,7 +7,7 @@
 services:
   freetube-sync:
     build:
-      context: ..
+      context: .
       dockerfile: deployments/Dockerfile
     image: freetube-sync:latest
     restart: unless-stopped

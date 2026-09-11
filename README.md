@@ -34,7 +34,6 @@ openssl rand -hex 32
 **Docker (recommended):**
 
 ```sh
-cd deployments
 cp .env.example .env
 # edit .env: set TOKEN to the value you generated above
 docker compose up -d
@@ -46,16 +45,15 @@ TLS in this default setup. For public exposure, use the standalone Caddy
 deployment instead:
 
 ```sh
-cd deployments
 cp .env.example .env
 # edit .env: set TOKEN, and DOMAIN to your real public domain
 docker compose -f compose.caddy.yaml up -d
 ```
 
 Both compose files store `state.json` in a Docker-managed named volume
-(`freetube-sync-data`), not a plain file under `deployments/`, so the image
-can run as its built-in nonroot user without host-permission issues. To
-inspect or back it up:
+(`freetube-sync-data`), not a plain file in the repo, so the image can run
+as its built-in nonroot user without host-permission issues. To inspect or
+back it up:
 
 ```sh
 docker compose cp freetube-sync:/data/state.json ./state.json
@@ -104,9 +102,9 @@ systemctl --user enable --now freetube-sync.timer
 ## Token rotation
 
 1. Pick a new token (`openssl rand -hex 32`).
-2. Update the server: change `TOKEN` in `deployments/.env` and run
-   `docker compose up -d` again from `deployments/` (or restart
-   `serve --token <new-token>` if running without Docker).
+2. Update the server: change `TOKEN` in `.env` and run `docker compose up
+   -d` again (or restart `serve --token <new-token>` if running without
+   Docker).
 3. On each client, re-run `./scripts/install-client.sh` — it prompts for a
    token, defaulting to the existing one; type the new one instead.
 4. Until a client is updated, its syncs fail closed on auth (401), then
